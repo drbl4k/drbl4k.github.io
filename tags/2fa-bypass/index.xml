@@ -33,9 +33,7 @@ Today’s blog is all about my experience with weird bypasses that I encountered
 &lt;/blockquote&gt;
 &lt;hr&gt;
 &lt;h3 id=&#34;authentication-bypass&#34;&gt;Authentication Bypass&lt;/h3&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;em&gt;&lt;strong&gt;An IDOR based authentication bypass (response manipulation):&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
-&lt;/ol&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;An IDOR based authentication bypass (response manipulation):&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;You can test this out in applications with multiple user roles/accounts where, the email and the role ID are returned in the response.&lt;/p&gt;
 &lt;p&gt;Original Request:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
@@ -62,9 +60,7 @@ Today’s blog is all about my experience with weird bypasses that I encountered
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;roleID&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;1&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;sometimes just tampering the “roleID” might lead to privilege escalation, but that depends on various other factors.&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;em&gt;&lt;strong&gt;JWT None algorithm tampered in response (response manipulation):&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
-&lt;/ol&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;JWT None algorithm tampered in response (response manipulation):&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Lets say, you have done basic response manipulation, but you noticed that the server returns a token on a successful login. In this case, log into the application once and copy the token. Set the algorithm type to “None” and remove the signature. Now try intercepting the response again with a wrong password, and paste the token parameter with the crafted token in the response and forward it. This may vary on the basis of signature. You may require a dummy one to be part of the crafted token in some apps.&lt;/p&gt;
 &lt;p&gt;Original JWT:&lt;/p&gt;
 &lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsInJvbGVfaWQiOiIxMDAyIiwiZXhwIjoxNzIyNDI1Mjc3fQ._Ml1VzOvHcmKHY2ElPBWjHbNdG56pYBvAhyHZdcSIAI
@@ -86,9 +82,7 @@ Today’s blog is all about my experience with weird bypasses that I encountered
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;token&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwicm9sZV9pZCI6IjEwMDEiLCJleHAiOjE3MjI0MjUyNzd9.&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;roleID&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;4&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ol&gt;
-&lt;li&gt;&lt;em&gt;&lt;strong&gt;Hardcoded token/credentials (JavaScript analysis):&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
-&lt;/ol&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;&lt;strong&gt;Hardcoded token/credentials (JavaScript analysis):&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;This one is pretty hard as most apps are secure enough not to include such blunders in code. But who knows? this was encountered personally by myself during a pentest 😎. Go to the Burp’s HTTP History and filter all the .js (JavaScript) &amp;amp; .json files. select a request and paste the username format/email/JWT regex. and move through the requests. there is 1 in a million chance for that.&lt;/p&gt;
 &lt;p&gt;&lt;img alt=&#34;/image.png&#34; src=&#34;https://drbl4k.github.io/images/Unusual-Authentication-and-2FA-Bypases/image.png&#34;&gt;&lt;/p&gt;
 &lt;p&gt;here is a list of regex that could help you out while searching for some hardcoded stuff,&lt;/p&gt;
@@ -100,14 +94,12 @@ Today’s blog is all about my experience with weird bypasses that I encountered
 &lt;/ul&gt;
 &lt;hr&gt;
 &lt;h3 id=&#34;two-factor-authentication-bypass&#34;&gt;Two Factor Authentication Bypass&lt;/h3&gt;
-&lt;p&gt;&lt;em&gt;(For this part I’m not covering usual things like brute force and response copy pate, identifying static OTPs as they those will be identified by Burp’s active scan.&lt;/em&gt;)&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;(For this part I’m not covering usual things like brute force and response copy pate, identifying static OTPs as they will be usually identified by the Burp’s active scanner.&lt;/em&gt;)&lt;/p&gt;
 &lt;p&gt;This is interesting because, the third one really was a new approach to OTP bypass which doesn’t involve touching the OTP at all (#tempting) 🤓.&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;em&gt;&lt;strong&gt;Downgrade APIs to lower version:&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;This one is pretty close to my heart, I found this downgrade issue across multiple apps where upon downgrading the API version say from v2 to v1, I managed to revel some sensitive (unintended) information about the flow and this in most cases allow OTP brute forcing, response manipulation. Maybe in some cases a default OTP would be present for that particular version (Haven’t got but heard).&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;Downgrade APIs to lower version:&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;This one is pretty close to my heart, I found this downgrade issue across multiple apps where, upon downgrading the API version say from v2 to v1, I managed to revel some sensitive (unintended) information about the flow and this in most cases allow OTP brute forcing, response manipulation. Maybe in some cases a default OTP would be present for that particular version (Haven’t got but heard).&lt;/p&gt;
 &lt;p&gt;Version 2 Request (Original):&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;POST /api**/v2/**verify-otp HTTP/1.1
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;POST /api/v2/verify-otp HTTP/1.1
 Host: example.com
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -117,7 +109,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   &amp;#34;otp&amp;#34;: &amp;#34;927314&amp;#34;
 }
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Version 1 Request (Tampered):&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;POST /api**/v1/**verify-otp HTTP/1.1
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;POST /api/v1/verify-otp HTTP/1.1
 Host: example.com
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -126,17 +118,13 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   &amp;#34;email&amp;#34;: &amp;#34;user@example.com&amp;#34;,
   &amp;#34;otp&amp;#34;: &amp;#34;927314&amp;#34;
 }
-&lt;/code&gt;&lt;/pre&gt;&lt;ol&gt;
-&lt;li&gt;&lt;strong&gt;Force Browsing Authenticated Page:&lt;/strong&gt;&lt;/li&gt;
-&lt;/ol&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;Force Browsing Authenticated Page:&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;This is a rare thing to find but still out there in the wild. &lt;strong&gt;A race condition&lt;/strong&gt; which allows to force browse the home page directly after the first level of Authentication &lt;em&gt;(password entry)&lt;/em&gt;. Let’s break this down.&lt;/p&gt;
 &lt;p&gt;&lt;img alt=&#34;https://portswigger.net/web-security/race-conditions#session-based-locking-mechanisms&#34; src=&#34;https://drbl4k.github.io/images/Unusual-Authentication-and-2FA-Bypases/image2.png&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Source: &lt;a href=&#34;https://portswigger.net/web-security/race-conditions#session-based-locking-mechanisms&#34;&gt;https://portswigger.net/web-security/race-conditions#session-based-locking-mechanisms&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;This happens because a multi step sequence takes place within the span of a single request. This means that the user temporarily has a valid session, but MFA isn&amp;rsquo;t yet being enforce. This allows an attacker to force browse the home page before entering the OTP.&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;strong&gt;Chaining Host Header Injection with OTP emails &lt;em&gt;(#Research):&lt;/em&gt;&lt;/strong&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;We all know that if an application is vulnerable to host header injection, we go straight to password reset functionalities to the same for link poisoning and stuff. What if, an application takes an Email to authenticate with an OTP later has this issue?. Imagine this in a black box application where you have a valid username and password, but 2FA ends up like this. &lt;em&gt;(Actively researching).&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Chaining Host Header Injection with OTP emails &lt;em&gt;(#Research):&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;We all know that if an application is vulnerable to host header injection, we go straight to password reset functionalities to test the same for link poisoning and stuff. What if, an application takes an email to authenticate with an OTP later has this issue?. Imagine this in a black box application where you have a valid username and password, but 2FA ends up like this. &lt;em&gt;(Actively researching).&lt;/em&gt;&lt;/p&gt;
 &lt;hr&gt;
 &lt;h3 id=&#34;key-takeaways&#34;&gt;Key Takeaways&lt;/h3&gt;
 &lt;ul&gt;

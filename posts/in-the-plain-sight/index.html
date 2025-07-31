@@ -87,7 +87,7 @@
   <header class="header">
   <div class="header__inner">
     <div class="header__logo">
-      <a href="/">
+      <a href="https://drbl4k.github.io/">
   <div class="logo">
     BL4K&#39;s Blogs
   </div>
@@ -134,7 +134,7 @@
 </blockquote>
 <hr>
 <p>Most of public reports (<em>around 55%</em>) in <strong>Hackerone</strong> indicate that, the components that are vulnerable to local file inclusions and SSRFs are identified to be either a functionality of an image/other files <code>(ie: PDF, CSV, ZIP etc.)</code> being loaded into the application through an external interaction <code>(ie: ?image=https://test.com/a.pdf)</code> or fetched locally within the file system of the hosted application <code>(ie: ?filename=test.png)</code>.</p>
-<p><img alt="image.png" src="/images/In-the-plain-sight/image.png"></p>
+<p><img alt="image.png" src="https://drbl4k.github.io/images/In-the-plain-sight/image.png"></p>
 <p><em>Source: <a href="https://vickieli.dev/ssrf/ssrf-in-the-wild/">https://vickieli.dev/ssrf/ssrf-in-the-wild/</a></em></p>
 <p>It’s fascinating, because, we as Pentesters usually go after the core functionalities of an application, (<em>Since it affects the business 😢</em>)  that could or couldn’t be vulnerable to such attacks, are really missing this perspective of attack vector all together. Let’s leave application pentest realm for a second, imagine conducting an external pentest, and encountering an application vulnerable to a full read SSRF attack and letting it slide because of the default filters. #horible</p>
 <hr>
@@ -151,10 +151,10 @@
 </blockquote>
 <hr>
 <p>On the last day I usually go for analysis of images and other files like PDFs and Excel for metadata exposure and upon applying the Burpsuite filter, one endpoint stood out. It was an endpoint trying to fetch a .zip file from the internal file system.  Now obviously it won’t be visible in the HTTP history due to receiving a binary file <strong>(<em>garbage data</em>)</strong> as response. The request had an interesting parameter which was pulling a zip file <code>/download/zip?fnames=UserLog\admin.zip&amp;sec=zip</code>. It looked something like this in the simulated environment.</p>
-<p><img alt="4.png" src="/images/In-the-plain-sight/4.png"></p>
+<p><img alt="4.png" src="https://drbl4k.github.io/images/In-the-plain-sight/4.png"></p>
 <p>Hmm, We all know what would have been my next move. Yes I tampered the <code>?fnames=</code> parameter with the payload <code>..\..\..\..\..\testfile</code> (Note, since the real request had a backslash with the file name, I used a traversal payload with backslashes). The real response for the request was a stack trace error indicating that <code>&quot;The file was not found in the path E:\testfile&quot;</code>. <strong>(<em>Pro Tip: something as simple as a stack trace could reveal a lot about the backend. #fightwithdevs</em>)</strong> Bingo! as soon I got the error indicating the internal file path I figured out where I was, and, I tried to fetch the “web.config” file <strong>(<em>Its a default multi purpose configuration file for IIS servers</em>)</strong> from the “E:” directory with the following payload <code>..\..\..\..\..\web.config</code>. It looked something like this.</p>
-<p><img alt="5.png" src="/images/In-the-plain-sight/5.png"></p>
-<p><img alt="6.png" src="/images/In-the-plain-sight/6.png"></p>
+<p><img alt="5.png" src="https://drbl4k.github.io/images/In-the-plain-sight/5.png"></p>
+<p><img alt="6.png" src="https://drbl4k.github.io/images/In-the-plain-sight/6.png"></p>
 <p>The web.config file usually throws an error of some kind (403 or 404 usually) if we try to access it directly through a web browser, but because of this path traversal vulnerability, I was able to access it and show the impact. In my case the file consisted details about the SMTP configuration with keys present in it. (<em>I was on top of the world</em>)</p>
 <hr>
 <p>Moral of the story, never trust any (<em>and I mean <strong>ANY</strong></em>) of the functionalities. By assuming so, we may giveaway the chance to find something cool. Even something as simple as a <strong>default Burpsuite filter</strong>, which hides images and binary data will act against us. Let’s be honest, who doesn’t want to find and exploit a local file inclusion or an SSRF? not me at least.</p>
@@ -225,7 +225,7 @@
 
 
 
-<script type="text/javascript" src="/bundle.min.js"></script>
+<script type="text/javascript" src="https://drbl4k.github.io/bundle.min.js"></script>
 
 
 

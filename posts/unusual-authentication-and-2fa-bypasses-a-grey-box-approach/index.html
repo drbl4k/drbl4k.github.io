@@ -6,7 +6,7 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Taking different approaches for Auth/2FA bypasses" />
+<meta name="description" content="Taking different routes for Auth/2FA bypasses involving chained attacks." />
 <meta name="keywords" content=", " />
 
   <meta name="robots" content="noodp" />
@@ -47,7 +47,7 @@
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Unusual Authentication and 2FA Bypasses (A Grey-Box Approach)">
-<meta property="og:description" content="Taking different approaches for Auth/2FA bypasses" />
+<meta property="og:description" content="Taking different routes for Auth/2FA bypasses involving chained attacks." />
 <meta property="og:url" content="https://drbl4k.github.io/posts/unusual-authentication-and-2fa-bypasses-a-grey-box-approach/" />
 <meta property="og:site_name" content="drbl4k blogs" />
 
@@ -87,7 +87,7 @@
   <header class="header">
   <div class="header__inner">
     <div class="header__logo">
-      <a href="/">
+      <a href="https://drbl4k.github.io/">
   <div class="logo">
     BL4K&#39;s Blogs
   </div>
@@ -109,7 +109,7 @@
   </h1>
   <div class="post-meta"><time class="post-date">2025-08-01</time><span class="post-author">drbl4k</span>
     
-<span class="post-reading-time">5 min read (998 words)</span></div>
+<span class="post-reading-time">5 min read (1000 words)</span></div>
 
   
     <span class="post-tags">
@@ -145,9 +145,7 @@
 </blockquote>
 <hr>
 <h3 id="authentication-bypass">Authentication Bypass<a href="#authentication-bypass" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
-<ol>
-<li><em><strong>An IDOR based authentication bypass (response manipulation):</strong></em></li>
-</ol>
+<p><em><strong>An IDOR based authentication bypass (response manipulation):</strong></em></p>
 <p>You can test this out in applications with multiple user roles/accounts where, the email and the role ID are returned in the response.</p>
 <p>Original Request:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
@@ -174,9 +172,7 @@
 </span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;roleID&#34;</span>: <span style="color:#e6db74">&#34;1&#34;</span>
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>sometimes just tampering the “roleID” might lead to privilege escalation, but that depends on various other factors.</p>
-<ol>
-<li><em><strong>JWT None algorithm tampered in response (response manipulation):</strong></em></li>
-</ol>
+<p><em><strong>JWT None algorithm tampered in response (response manipulation):</strong></em></p>
 <p>Lets say, you have done basic response manipulation, but you noticed that the server returns a token on a successful login. In this case, log into the application once and copy the token. Set the algorithm type to “None” and remove the signature. Now try intercepting the response again with a wrong password, and paste the token parameter with the crafted token in the response and forward it. This may vary on the basis of signature. You may require a dummy one to be part of the crafted token in some apps.</p>
 <p>Original JWT:</p>
 <pre tabindex="0"><code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsInJvbGVfaWQiOiIxMDAyIiwiZXhwIjoxNzIyNDI1Mjc3fQ._Ml1VzOvHcmKHY2ElPBWjHbNdG56pYBvAhyHZdcSIAI
@@ -198,11 +194,9 @@
 </span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;token&#34;</span>: <span style="color:#e6db74">&#34;eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwicm9sZSI6ImFkbWluIiwicm9sZV9pZCI6IjEwMDEiLCJleHAiOjE3MjI0MjUyNzd9.&#34;</span>
 </span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;roleID&#34;</span>: <span style="color:#e6db74">&#34;4&#34;</span>
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><ol>
-<li><em><strong>Hardcoded token/credentials (JavaScript analysis):</strong></em></li>
-</ol>
+</span></span></code></pre></div><p><em><strong>Hardcoded token/credentials (JavaScript analysis):</strong></em></p>
 <p>This one is pretty hard as most apps are secure enough not to include such blunders in code. But who knows? this was encountered personally by myself during a pentest 😎. Go to the Burp’s HTTP History and filter all the .js (JavaScript) &amp; .json files. select a request and paste the username format/email/JWT regex. and move through the requests. there is 1 in a million chance for that.</p>
-<p><img alt="/image.png" src="/images/Unusual-Authentication-and-2FA-Bypases/image.png"></p>
+<p><img alt="/image.png" src="https://drbl4k.github.io/images/Unusual-Authentication-and-2FA-Bypases/image.png"></p>
 <p>here is a list of regex that could help you out while searching for some hardcoded stuff,</p>
 <ul>
 <li>“^[a-zA-Z0-9]+([._-][a-zA-Z0-9]+)*@[a-zA-Z0-9-]+.[a-zA-Z]{2,}$”   — <strong>Covers emails</strong>.</li>
@@ -212,14 +206,12 @@
 </ul>
 <hr>
 <h3 id="two-factor-authentication-bypass">Two Factor Authentication Bypass<a href="#two-factor-authentication-bypass" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
-<p><em>(For this part I’m not covering usual things like brute force and response copy pate, identifying static OTPs as they those will be identified by Burp’s active scan.</em>)</p>
+<p><em>(For this part I’m not covering usual things like brute force and response copy pate, identifying static OTPs as they will be usually identified by the Burp’s active scanner.</em>)</p>
 <p>This is interesting because, the third one really was a new approach to OTP bypass which doesn’t involve touching the OTP at all (#tempting) 🤓.</p>
-<ol>
-<li><em><strong>Downgrade APIs to lower version:</strong></em></li>
-</ol>
-<p>This one is pretty close to my heart, I found this downgrade issue across multiple apps where upon downgrading the API version say from v2 to v1, I managed to revel some sensitive (unintended) information about the flow and this in most cases allow OTP brute forcing, response manipulation. Maybe in some cases a default OTP would be present for that particular version (Haven’t got but heard).</p>
+<p><em><strong>Downgrade APIs to lower version:</strong></em></p>
+<p>This one is pretty close to my heart, I found this downgrade issue across multiple apps where, upon downgrading the API version say from v2 to v1, I managed to revel some sensitive (unintended) information about the flow and this in most cases allow OTP brute forcing, response manipulation. Maybe in some cases a default OTP would be present for that particular version (Haven’t got but heard).</p>
 <p>Version 2 Request (Original):</p>
-<pre tabindex="0"><code>POST /api**/v2/**verify-otp HTTP/1.1
+<pre tabindex="0"><code>POST /api/v2/verify-otp HTTP/1.1
 Host: example.com
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -229,7 +221,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   &#34;otp&#34;: &#34;927314&#34;
 }
 </code></pre><p>Version 1 Request (Tampered):</p>
-<pre tabindex="0"><code>POST /api**/v1/**verify-otp HTTP/1.1
+<pre tabindex="0"><code>POST /api/v1/verify-otp HTTP/1.1
 Host: example.com
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -238,17 +230,13 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   &#34;email&#34;: &#34;user@example.com&#34;,
   &#34;otp&#34;: &#34;927314&#34;
 }
-</code></pre><ol>
-<li><strong>Force Browsing Authenticated Page:</strong></li>
-</ol>
+</code></pre><p><strong>Force Browsing Authenticated Page:</strong></p>
 <p>This is a rare thing to find but still out there in the wild. <strong>A race condition</strong> which allows to force browse the home page directly after the first level of Authentication <em>(password entry)</em>. Let’s break this down.</p>
-<p><img alt="https://portswigger.net/web-security/race-conditions#session-based-locking-mechanisms" src="/images/Unusual-Authentication-and-2FA-Bypases/image2.png"></p>
+<p><img alt="https://portswigger.net/web-security/race-conditions#session-based-locking-mechanisms" src="https://drbl4k.github.io/images/Unusual-Authentication-and-2FA-Bypases/image2.png"></p>
 <p>Source: <a href="https://portswigger.net/web-security/race-conditions#session-based-locking-mechanisms">https://portswigger.net/web-security/race-conditions#session-based-locking-mechanisms</a></p>
 <p>This happens because a multi step sequence takes place within the span of a single request. This means that the user temporarily has a valid session, but MFA isn&rsquo;t yet being enforce. This allows an attacker to force browse the home page before entering the OTP.</p>
-<ol>
-<li><strong>Chaining Host Header Injection with OTP emails <em>(#Research):</em></strong></li>
-</ol>
-<p>We all know that if an application is vulnerable to host header injection, we go straight to password reset functionalities to the same for link poisoning and stuff. What if, an application takes an Email to authenticate with an OTP later has this issue?. Imagine this in a black box application where you have a valid username and password, but 2FA ends up like this. <em>(Actively researching).</em></p>
+<p><strong>Chaining Host Header Injection with OTP emails <em>(#Research):</em></strong></p>
+<p>We all know that if an application is vulnerable to host header injection, we go straight to password reset functionalities to test the same for link poisoning and stuff. What if, an application takes an email to authenticate with an OTP later has this issue?. Imagine this in a black box application where you have a valid username and password, but 2FA ends up like this. <em>(Actively researching).</em></p>
 <hr>
 <h3 id="key-takeaways">Key Takeaways<a href="#key-takeaways" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
 <ul>
@@ -317,7 +305,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 
 
-<script type="text/javascript" src="/bundle.min.js"></script>
+<script type="text/javascript" src="https://drbl4k.github.io/bundle.min.js"></script>
 
 
 
