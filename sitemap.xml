@@ -2,19 +2,31 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://drbl4k.github.io/posts/client-side-decryption---decrypting-hashed-request-24186941a0fe8084a048f057f478a8df/</loc>
+    <lastmod>2025-08-01T08:17:26+05:30</lastmod>
+  </url><url>
+    <loc>https://drbl4k.github.io/tags/client-side/</loc>
+    <lastmod>2025-08-01T08:17:26+05:30</lastmod>
+  </url><url>
+    <loc>https://drbl4k.github.io/tags/cryptography/</loc>
+    <lastmod>2025-08-01T08:17:26+05:30</lastmod>
+  </url><url>
+    <loc>https://drbl4k.github.io/tags/decryption/</loc>
+    <lastmod>2025-08-01T08:17:26+05:30</lastmod>
+  </url><url>
+    <loc>https://drbl4k.github.io/</loc>
+    <lastmod>2025-08-01T08:17:26+05:30</lastmod>
+  </url><url>
+    <loc>https://drbl4k.github.io/posts/</loc>
+    <lastmod>2025-08-01T08:17:26+05:30</lastmod>
+  </url><url>
+    <loc>https://drbl4k.github.io/tags/</loc>
+    <lastmod>2025-08-01T08:17:26+05:30</lastmod>
+  </url><url>
     <loc>https://drbl4k.github.io/tags/2fa-bypass/</loc>
     <lastmod>2025-08-01T00:10:21+05:30</lastmod>
   </url><url>
     <loc>https://drbl4k.github.io/tags/auth-bypass/</loc>
-    <lastmod>2025-08-01T00:10:21+05:30</lastmod>
-  </url><url>
-    <loc>https://drbl4k.github.io/</loc>
-    <lastmod>2025-08-01T00:10:21+05:30</lastmod>
-  </url><url>
-    <loc>https://drbl4k.github.io/posts/</loc>
-    <lastmod>2025-08-01T00:10:21+05:30</lastmod>
-  </url><url>
-    <loc>https://drbl4k.github.io/tags/</loc>
     <lastmod>2025-08-01T00:10:21+05:30</lastmod>
   </url><url>
     <loc>https://drbl4k.github.io/posts/unusual-authentication-and-2fa-bypasses-a-grey-box-approach/</loc>

@@ -6,7 +6,135 @@
     <description>Recent content in Posts on drbl4k blogs</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Fri, 01 Aug 2025 00:10:21 +0530</lastBuildDate><atom:link href="https://drbl4k.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 01 Aug 2025 08:17:26 +0530</lastBuildDate><atom:link href="https://drbl4k.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Client Side Decryption - Decrypting Hashed Request and Responses Part -1 (Web App Version)</title>
+      <link>https://drbl4k.github.io/posts/client-side-decryption---decrypting-hashed-request-24186941a0fe8084a048f057f478a8df/</link>
+      <pubDate>Fri, 01 Aug 2025 08:17:26 +0530</pubDate>
+      
+      <guid>https://drbl4k.github.io/posts/client-side-decryption---decrypting-hashed-request-24186941a0fe8084a048f057f478a8df/</guid>
+      <description>We all must have encountered that one particular app which encrypts very single POST/GET request that is being sent. Worst part is that even the response received will be encrypted and cannot be viewed at proxy level (Inside Burp). Pretty annoying isn’t it. In today’s blog lets cover one of the cryptographic misconfigurations that took place on the encryption part and how I managed to get the decryption logic and expanded my capabilities further.</description>
+      <content>&lt;p&gt;We all must have encountered that one particular app which encrypts very single POST/GET request that is being sent. Worst part is that even the response received will be encrypted and cannot be viewed at proxy level (Inside Burp). &lt;strong&gt;Pretty annoying isn’t it&lt;/strong&gt;. In today’s blog lets cover one of the cryptographic misconfigurations that took place on the encryption part and how I managed to get the decryption logic and expanded my capabilities further.&lt;/p&gt;
+&lt;p&gt;The picture below is what the blog is gonna be about. (Just so you don’t wonder whether this is the right blog😝)&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;1.jpeg&#34; src=&#34;https://drbl4k.github.io/images/decryption/1.jpeg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;Spoiler&lt;/strong&gt;&lt;/em&gt;: In this blog’s case I managed to find the static keys and iv and proceeded for further decryption. I &lt;strong&gt;used Chat-GPT&lt;/strong&gt; to make me a script for decryption. However, applications do encrypt and decrypt on runtime as well. We have to understand the logic of encryption in order to figure out the same &lt;em&gt;&lt;strong&gt;(#comingsoon)&lt;/strong&gt;&lt;/em&gt;.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;base-logic&#34;&gt;&lt;em&gt;Base Logic&lt;/em&gt;&lt;/h3&gt;
+&lt;p&gt;Let’s say we have an application and we are able view the data inside of it on the &lt;strong&gt;browser level&lt;/strong&gt;. Now at the &lt;strong&gt;proxy level&lt;/strong&gt;, things take a turn, as the request and response become &lt;strong&gt;encrypted&lt;/strong&gt; (unreadable). This it self means that, on the browser/front end code, there should be a logic present somewhere, to encrypt and decrypt the request and responses. Having this thing cleared is important in order to know what exactly are we looking for.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;What are we looking for?:&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The logic of encryption and decryption. (Inside JavaScript files)&lt;/li&gt;
+&lt;li&gt;Understand the algorithm and padding type.&lt;/li&gt;
+&lt;li&gt;Understand how the key and iv are fetched and trace it back.&lt;/li&gt;
+&lt;li&gt;Check if iv re-use takes place or a static iv is present. &lt;em&gt;&lt;strong&gt;(Big misconfiguration)&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Since we know what we are looking for now, let’s dive into the techniques of decryption 😎&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;techniques&#34;&gt;&lt;em&gt;Techniques&lt;/em&gt;&lt;/h3&gt;
+&lt;p&gt;Setup the Burpsuite and load the application and make a login request. This should have triggered all sorts of files/logic required for encryption and decryption. Now in the HTTP history, search for the following key words,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;.encrypt&lt;/li&gt;
+&lt;li&gt;.decrypt&lt;/li&gt;
+&lt;li&gt;encfunction&lt;/li&gt;
+&lt;li&gt;CryptoJS.AES&lt;/li&gt;
+&lt;li&gt;.crypt&lt;/li&gt;
+&lt;li&gt;encryptAes&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The above keywords should lead you to some sort of encryption logic. Also when looking for key words, if you come across files like &lt;code&gt;crypto.min.js&lt;/code&gt;, then quite frankly that’s where the logic is gonna be. But in my case it was inside the &lt;code&gt;chunk.js&lt;/code&gt; file.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Keyword:&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;keyword.png&#34; src=&#34;https://drbl4k.github.io/images/decryption/keyword.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Encryption Logic:&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;logic.jpeg&#34; src=&#34;https://drbl4k.github.io/images/decryption/logic.jpeg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Based on the number of occurrences you might have to scroll through a lot of code to find the logic. In my case the logic is not obfuscated &lt;em&gt;(you can flag this as a security issue after successful decryption)&lt;/em&gt; . Now, since we found the logic lets go ahead and hook these functions via developer console. Open the dev console and navigate to “Sources”. Search any particular term from the logic to find the function. hook whatever you feel like is the place of encryption. In my case I hooked at the lines shown in the below image. After hooking try refreshing or making a POST request to trigger the logic. Now you can hover over the key and the iv to get the values.&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;2.jpeg&#34; src=&#34;https://drbl4k.github.io/images/decryption/2.jpeg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;3.jpeg&#34; src=&#34;https://drbl4k.github.io/images/decryption/3.jpeg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;What do I have till now:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Got the Logic for both encryption and decryption.&lt;/li&gt;
+&lt;li&gt;AES 128 CBC has been used.&lt;/li&gt;
+&lt;li&gt;Pkcs5Pad padding has been used.&lt;/li&gt;
+&lt;li&gt;The key and the iv are recoverable in Unit8Array format.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Now before proceeding with the decryption part, let’s discuss where the developers had misconfigured. Its critical to understand to expands our capabilities.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;the-vulnerability&#34;&gt;&lt;em&gt;The vulnerability&lt;/em&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;The application was using a &lt;strong&gt;static iv and a key&lt;/strong&gt; to encrypt and decrypt. Iv is something that should &lt;strong&gt;not be re-used&lt;/strong&gt; after a single encryption/decryption takes place. &lt;em&gt;(This should be flagged upon successful decryption)&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;AES-CBC is an outdated encryption mode. the logic of it is easy to break.&lt;/li&gt;
+&lt;li&gt;Even if the key and the iv is present in the form of Unit8Array, it still can be used for decryption.&lt;/li&gt;
+&lt;li&gt;There was no obfuscation on the logic whatsoever. In most cases unlike a Unit8Array, you can find hardcoded keys which can directly be used for decryption.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;decrypting-everything&#34;&gt;&lt;em&gt;Decrypting Everything&lt;/em&gt;&lt;/h3&gt;
+&lt;p&gt;Since we have the Unit8Array of both key and iv, I asked chat GPT to write me a html file with a decryption script for the identified logic. here is what it gave me:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;html&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;head&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;title&lt;/span&gt;&amp;gt;Offline AES-CBC Decryption&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;title&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;src&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js&amp;#34;&lt;/span&gt;&amp;gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;head&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;body&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;h2&lt;/span&gt;&amp;gt;Decryption Output&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;h2&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;pre&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;output&amp;#34;&lt;/span&gt;&amp;gt;Decrypting...&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;pre&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// Replace with your actual Uint8Array key and IV
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;keyArray&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Uint8Array&lt;/span&gt;([&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;add the array here&amp;#34;&lt;/span&gt;]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ivArray&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Uint8Array&lt;/span&gt;([&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;add the array here&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ciphertextHex&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;acf94ec15f5ef42ec7994ee0e01c92a779682ab797330ee01dacd8a9c2fc5df7 &amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;decryptAES_CBC&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;ciphertextHex&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;keyArray&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;ivArray&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;key&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CryptoJS&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;lib&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;WordArray&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;create&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;keyArray&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;iv&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CryptoJS&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;lib&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;WordArray&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;create&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;ivArray&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ciphertext&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CryptoJS&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;enc&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Hex&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;parse&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;ciphertextHex&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;decrypted&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CryptoJS&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;AES&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;decrypt&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        { &lt;span style=&#34;color:#a6e22e&#34;&gt;ciphertext&lt;/span&gt; },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;key&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;iv&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;iv&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;mode&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CryptoJS&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;mode&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;CBC&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;padding&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CryptoJS&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;pad&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Pkcs7&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      );
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;decrypted&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;toString&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;CryptoJS&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;enc&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Utf8&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;plaintext&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;decryptAES_CBC&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;ciphertextHex&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;keyArray&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;ivArray&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;output&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;innerText&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;plaintext&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;[Decryption failed]&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;output&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;innerText&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;body&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;html&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img alt=&#34;5.jpeg&#34; src=&#34;https://drbl4k.github.io/images/decryption/5.jpeg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&#34;7.jpeg&#34; src=&#34;https://drbl4k.github.io/images/decryption/7.jpeg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Post running this script on an the mentioned encrypted text, I was able to decrypt the values. Now this opens up a lot of possibilities for things like IDOR, SQL Injections etc. I just have to generate another script to encrypt the body with the same key and iv (impactful isn&amp;rsquo;t it).&lt;/p&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;key-takeaways&#34;&gt;&lt;em&gt;Key Takeaways&lt;/em&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Always look into the code, (cannot be bypassed XD)&lt;/li&gt;
+&lt;li&gt;Analyze how keys are used and check whether they are static across multiple accounts/sessions.&lt;/li&gt;
+&lt;li&gt;Its not bad to ask for help, (Ask AI).&lt;/li&gt;
+&lt;li&gt;Be clear with padding types as they might cause failure of decryption&lt;/li&gt;
+&lt;li&gt;encryption should not be the sole line of defense. Comprehensive security testing must be conducted for potential vulnerabilities at multiple levels.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.linkedin.com/pulse/how-i-exploited-idor-encrypted-mobile-api-withfrida-george-joseph-rydjc/?trackingId=dwlmpvH4Qyil87BHWllpYw%3D%3D&#34;&gt;https://www.linkedin.com/pulse/how-i-exploited-idor-encrypted-mobile-api-withfrida-george-joseph-rydjc/?trackingId=dwlmpvH4Qyil87BHWllpYw%3D%3D&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;Happy Hunting Fellas.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Yours Truly: DRBL4K&lt;/em&gt;&lt;/p&gt;
+</content>
+    </item>
+    
     <item>
       <title>Unusual Authentication and 2FA Bypasses (A Grey-Box Approach)</title>
       <link>https://drbl4k.github.io/posts/unusual-authentication-and-2fa-bypasses-a-grey-box-approach/</link>
